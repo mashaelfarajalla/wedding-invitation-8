@@ -8,13 +8,13 @@
 <meta property="og:title" content="دعوة زفاف">
 <meta property="og:description" content="بكل فرح ندعوكم لمشاركتنا حفل زفافنا">
 <meta name="theme-color" content="#efe6d2">
-<link rel="preload" as="image" href="assets/envelope-body-w.jpg" media="(min-aspect-ratio: 3/4)">
-<link rel="preload" as="image" href="assets/envelope-flap-w.png" media="(min-aspect-ratio: 3/4)">
-<link rel="preload" as="image" href="assets/envelope-body-m-w.jpg" media="(max-aspect-ratio: 3/4)">
-<link rel="preload" as="image" href="assets/envelope-flap-m-w.png" media="(max-aspect-ratio: 3/4)">
-<link rel="preload" as="image" href="assets/card.jpg">
-<link rel="preload" as="image" href="assets/seal.png">
-<link rel="preload" as="image" href="assets/damask.jpg">
+<!-- only what the closed envelope needs is preloaded; the page behind it (paper, flowers, map, hero fonts) waits for the load event -->
+<link rel="preload" as="image" href="assets/envelope-body-w.webp" media="(min-aspect-ratio: 3/4)" fetchpriority="high">
+<link rel="preload" as="image" href="assets/envelope-flap-w.webp" media="(min-aspect-ratio: 3/4)" fetchpriority="high">
+<link rel="preload" as="image" href="assets/envelope-body-m-w.webp" media="(max-aspect-ratio: 3/4)" fetchpriority="high">
+<link rel="preload" as="image" href="assets/envelope-flap-m-w.webp" media="(max-aspect-ratio: 3/4)" fetchpriority="high">
+<link rel="preload" as="image" href="assets/seal.webp" fetchpriority="high">
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/pinyonscript-6xKpdSJbL9-e9LuoeQiDRQR8WOXaOg.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/elmessiri-arabic.woff2" crossorigin>
 <link href="assets/fonts/fonts.css" rel="stylesheet">
 <style>
@@ -35,7 +35,7 @@
     --bg:#efe6d2;               /* cream of the damask paper shared by the whole page */
     --bg-tint:rgba(252,248,240,.5);
     /* one type & spacing scale for the whole page */
-    --font-body:'El Messiri','Tajawal',sans-serif;
+    --font-body:'El Messiri',sans-serif;
     --fs-xs:12px;    /* hints */
     --fs-sm:13px;    /* labels, captions */
     --fs-base:15px;  /* body text, buttons */
@@ -50,15 +50,23 @@
     font-family:var(--font-body);
     /* the embossed damask paper runs under the whole page (hero included), softened by a light cream tint;
        the tile is the photo mirrored both ways, so it repeats without seams */
-    background:
-      linear-gradient(var(--bg-tint),var(--bg-tint)),
-      url("assets/damask.jpg") center top/640px auto repeat,
-      var(--bg);
+    background:linear-gradient(var(--bg-tint),var(--bg-tint)),var(--bg);
     color:var(--ink);
     overflow-x:hidden;
     line-height:1.8;
   }
+  body:not(.defer){
+    background:
+      linear-gradient(var(--bg-tint),var(--bg-tint)),
+      url("assets/damask.webp") center top/640px auto repeat,
+      var(--bg);
+  }
   body.locked{overflow:hidden;height:100vh;height:100svh}
+  /* until the envelope has come in, the page behind it is left out, so its fonts and images
+     don't compete with the envelope for the first paint (the class goes after that, or on opening) */
+  .defer .hero-in,.defer .scroll-cue,.defer main{display:none}
+  /* the page's looping animations wait behind the envelope instead of repainting unseen */
+  body:not(.opened) :is(.verse,.scroll-cue,.map-pin)::before,body:not(.opened) :is(.verse,.scroll-cue){animation-play-state:paused}
   a{color:inherit;text-decoration:none}
   button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
   .wrap{max-width:480px;margin:0 auto;position:relative}
@@ -75,11 +83,11 @@
     /* the final dissolve: the light fades into the page through a soft brightening */
     transition:opacity 1s ease, transform 1.1s cubic-bezier(.2,.9,.2,1), filter .8s ease, visibility 0s 1.1s;
   }
-  /* blurred, semi-transparent photo of the envelope as the backdrop */
+  /* blurred, semi-transparent photo of the envelope as the backdrop; the blur is baked into a tiny image
+     (a live full-screen blur(26px) held the first paint back while it rasterised) */
   #intro::before{
     content:"";position:absolute;inset:-40px;z-index:0;pointer-events:none;
-    background:url("assets/envelope-body-w.jpg") center/cover no-repeat;
-    filter:blur(26px);
+    background:url("assets/envelope-blur-w.webp") center/cover no-repeat;
     opacity:.35;
   }
   #intro::after{ /* soft light in the middle + darker edges so the envelope stands out */
@@ -112,22 +120,6 @@
   .env-flap .in{transform:rotateY(180deg);filter:brightness(.88)} /* inner face: stays hinged at the top edge once the flap flips */
   .env-body,.env-flap{transition:transform 1s cubic-bezier(.45,0,.2,1),opacity .8s ease}
 
-  /* the real card photo, hidden behind the envelope body */
-  .env-card{
-    position:absolute;z-index:2;left:29%;width:42%;top:5%;aspect-ratio:718/1023;
-    container-type:inline-size;
-    background:url("assets/card.jpg") center/cover;
-    border-radius:3px;
-    box-shadow:0 14px 30px -12px rgba(92,31,46,.45),0 1px 2px rgba(92,31,46,.15);
-    display:flex;flex-direction:column;align-items:center;padding-top:14%;
-    text-align:center;color:var(--wine);
-    transition:transform 1.4s cubic-bezier(.3,.1,.2,1);
-  }
-  .env-card small{font-family:'Amiri',serif;font-size:6.5cqw;color:var(--gold-dark)}
-  .env-card h3{font-family:'Aref Ruqaa',serif;font-weight:700;font-size:17cqw;line-height:1.15;margin-top:8%}
-  .env-card h3 i{display:block;font-style:normal;font-family:'Amiri',serif;font-size:.5em;color:var(--rose);font-weight:400}
-  .env-card p{font-size:6cqw;color:var(--muted);margin-top:4%;line-height:1.6}
-
   /* real wax seal (single PNG) */
   .seal{
     position:absolute;z-index:6;left:50.52%;top:46.68%;width:20.5%;aspect-ratio:1;
@@ -157,6 +149,7 @@
     .env-body{border-radius:0;box-shadow:none}
     .seal{left:50.22%;top:53.08%;width:30%}
     .env-note{top:63%}
+    #intro::before{background-image:url("assets/envelope-blur-m-w.webp")}
     .env-note .en{font-size:5.8cqw}
     .env-note .nm{font-size:9.5cqw;margin-top:.5cqw}
     .seal img{filter:drop-shadow(0 2px 2px rgba(96,74,56,.2))}
@@ -237,6 +230,8 @@
     100%{transform:translateY(-75%) rotateX(68deg)}
   }
   @keyframes flapDim{from{filter:brightness(.84)}to{filter:brightness(.7)}}
+  @keyframes flapDimSoft{from{filter:brightness(.94)}to{filter:brightness(.84)}}
+  .env-pocket{display:none}
 
   /* ---- the light from inside: soft and round, no hard shapes — the envelope's own inside shows through ---- */
   /* under the flap: a warm glow that lights up the inside of the envelope as the flap lifts */
@@ -271,7 +266,6 @@
   }
   #intro.s3 .flood{opacity:1}
   #intro.s3 .envelope>picture,#intro.s3 .env-flap,#intro.s3 .env-shade,#intro.s3 .env-shaft{opacity:0;transition:opacity 1s ease}
-  #intro.s3 .env-card{opacity:0;transition:opacity .4s ease} /* the hidden card behind the envelope must not show through as it melts */
   /* the body photo has the closed flap printed on it, so once the real flap lifts the envelope would still
      look shut: this layer, cut to the flap's exact shape (the flap image is its mask), turns that area into
      the shaded inside of the open envelope, deepest just above the pocket's edge */
@@ -283,9 +277,9 @@
       linear-gradient(180deg,rgb(214,214,214) 0%,rgb(242,242,242) 5%,#fff 11%),
       radial-gradient(ellipse 75% 62% at 50% 0,#fff 0%,rgb(240,240,240) 45%,rgb(212,212,212) 92%);
     background-blend-mode:multiply;mix-blend-mode:multiply;
-    -webkit-mask:url("assets/envelope-flap-w.png") 0 0/100% 100% no-repeat;mask:url("assets/envelope-flap-w.png") 0 0/100% 100% no-repeat;
+    -webkit-mask:url("assets/envelope-flap-w.webp") 0 0/100% 100% no-repeat;mask:url("assets/envelope-flap-w.webp") 0 0/100% 100% no-repeat;
   }
-  @media (max-aspect-ratio: 3/4){.env-inside{-webkit-mask-image:url("assets/envelope-flap-m-w.png");mask-image:url("assets/envelope-flap-m-w.png")}}
+  @media (max-aspect-ratio: 3/4){.env-inside{-webkit-mask-image:url("assets/envelope-flap-m-w.webp");mask-image:url("assets/envelope-flap-m-w.webp")}}
   #intro.s2 .env-inside{opacity:1;transition:opacity 1.4s ease .2s}
   #intro.s3 .env-inside{opacity:0;transition:opacity .5s ease}
   /* the warm diagonal beam that slides in across the paper (over everything, like light in the room) */
@@ -304,7 +298,15 @@
     #intro.s2 .env-flap>picture>img,#intro.s2 .seal img{animation:flapDim 3.3s ease-in both}
     #intro.s2 .envelope{transform:scale(1.1);transition:transform 4.2s cubic-bezier(.3,.1,.3,1)}
     /* the room dims more, so the light inside stands out the way it does in the film */
-    #intro.s1 .env-body{filter:brightness(.72) saturate(.94)}
+    #intro.s1 .env-body{filter:brightness(.9)}
+    /* only a light dimming on phones, so each envelope keeps its real colour while it opens */
+    #intro.s1 .env-flap>picture>img{filter:brightness(.94)}
+    #intro.s2 .env-flap>picture>img,#intro.s2 .seal img{animation:flapDimSoft 3.3s ease-in both}
+    /* the envelope's straight front edge: the open triangle's tip tucks in behind it */
+    .env-pocket{display:block;position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;opacity:0}
+    #intro.s1 .env-pocket{filter:brightness(.9);transition:filter 2.4s ease}
+    #intro.s2 .env-pocket{opacity:1;transition:filter 2.4s ease,opacity 1.4s ease .2s}
+    #intro.s3 .env-pocket{opacity:0;transition:opacity .5s ease}
     /* the light layers are already soft gradients, so phones skip their live blur (blurring and blending
        full-screen layers every frame is what made the opening stutter); the moving layers get their own
        GPU layer as soon as the seal is tapped */
@@ -397,10 +399,10 @@
   section:nth-of-type(even)::after,section:nth-of-type(odd):not(:first-of-type)::after{
     content:"";position:absolute;top:0;bottom:0;left:50%;width:100vw;transform:translateX(-50%);z-index:-1;
     pointer-events:none;opacity:.14;
-    background:url("assets/flower-top.png") right -40px top 10px/min(30vw,170px) auto no-repeat;
+    background:url("assets/flower-top.webp") right -40px top 10px/min(30vw,170px) auto no-repeat;
   }
   section:nth-of-type(odd):not(:first-of-type)::after{
-    background:url("assets/flower-bottom.png") left -40px bottom 0/min(30vw,170px) auto no-repeat;
+    background:url("assets/flower-bottom.webp") left -40px bottom 0/min(30vw,170px) auto no-repeat;
   }
   .card{
     background:linear-gradient(180deg,rgba(255,253,250,.92),rgba(253,247,243,.88));
@@ -556,7 +558,8 @@
   }
   .toast.show{opacity:1;transform:translateX(-50%)}
 
-  @keyframes envIn{from{opacity:0;translate:0 40px;scale:.94}to{opacity:1;translate:0 0;scale:1}}
+  /* starts at .01, not 0: looks the same, but the browser counts the envelope as painted from the first frame */
+  @keyframes envIn{from{opacity:.01;translate:0 40px;scale:.94}to{opacity:1;translate:0 0;scale:1}}
   @keyframes sealPulse{0%,100%{transform:translate(-50%,-50%) translateZ(1px) scale(1)}50%{transform:translate(-50%,-50%) translateZ(1px) scale(1.05)}}
   @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
   @keyframes shine{to{background-position:200% center}}
@@ -567,11 +570,11 @@
     .reveal{transform:none}
   }
 </style>
-<link rel="icon" type="image/png" href="mersal-favicon.png">
-<link rel="apple-touch-icon" href="mersal-favicon.png">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>.mersal-credit{margin:22px auto 0;font-size:12.5px;line-height:1.8;text-align:center;letter-spacing:.2px;opacity:.7;position:relative;z-index:2}.mersal-credit::before{content:"";display:block;width:36px;height:1px;margin:0 auto 12px;background:currentColor;opacity:.35}.mersal-credit a{color:inherit;text-decoration:none;white-space:nowrap;transition:opacity .2s}.mersal-credit a:hover{opacity:.6}.mersal-credit b{font-weight:700}.mersal-credit i{font-style:normal;margin:0 6px;opacity:.6}.mersal-credit span[dir]{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:.92em;letter-spacing:.4px}.mersal-credit .mc-tag{display:block;font-size:1.08em;margin-bottom:4px;letter-spacing:.3px}.mersal-credit a{display:inline-block;font-size:.95em;opacity:.85}</style>
 </head>
-<body class="locked">
+<body class="locked defer">
 
 
 <!-- ============ INTRO (envelope photo layers + real wax seal + card photo) ============ -->
@@ -579,40 +582,33 @@
   <i class="dusk" aria-hidden="true"></i><i class="flood" aria-hidden="true"></i>
   <div class="env-stage">
     <div class="envelope">
-      <div class="env-card" id="envCard">
-        <small>بسم الله الرحمن الرحيم</small>
-        <h3><span data-f="groom"></span><i>&amp;</i><span data-f="bride"></span></h3>
-        <p id="cardDate"></p>
-      </div>
       <!-- phones (portrait) get a tall envelope that fills the screen -->
       <picture>
-        <source media="(max-aspect-ratio: 3/4)" srcset="assets/envelope-body-m-w.jpg">
-        <img class="env-body" src="assets/envelope-body-w.jpg" alt="">
+        <source media="(max-aspect-ratio: 3/4)" srcset="assets/envelope-body-m-w.webp">
+        <img class="env-body" src="assets/envelope-body-w.webp" alt="" fetchpriority="high" decoding="async">
       </picture>
       <!-- written on the envelope, just under the seal -->
       <div class="env-note">
         <p class="en" dir="ltr">This invitation is for you.</p>
         <p class="nm" dir="ltr"><span data-f="groomEn"></span><i>&amp;</i><span data-f="brideEn"></span></p>
       </div>
-      <i class="env-inside" aria-hidden="true"></i><i class="env-shade" aria-hidden="true"></i>
+      <i class="env-inside" aria-hidden="true"></i>
+      <picture><source media="(max-aspect-ratio: 3/4)" srcset="assets/envelope-pocket-m-w.webp"><img class="env-pocket" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt=""></picture><i class="env-shade" aria-hidden="true"></i>
       <!-- light inside the envelope, revealed as the flap lifts -->
       <i class="env-light" aria-hidden="true"></i>
       <i class="env-bloom" aria-hidden="true"></i><i class="env-shaft" aria-hidden="true"></i>
       <div class="env-flap">
         <picture>
-          <source media="(max-aspect-ratio: 3/4)" srcset="assets/envelope-flap-m-w.png">
-          <img src="assets/envelope-flap-w.png" alt="">
+          <source media="(max-aspect-ratio: 3/4)" srcset="assets/envelope-flap-m-w.webp">
+          <img src="assets/envelope-flap-w.webp" alt="" fetchpriority="high">
         </picture>
         <picture>
-          <source media="(max-aspect-ratio: 3/4)" srcset="assets/envelope-flap-m-w.png">
-          <img class="in" src="assets/envelope-flap-w.png" alt="">
+          <source media="(max-aspect-ratio: 3/4)" srcset="assets/envelope-flap-m-w.webp">
+          <img class="in" src="assets/envelope-flap-w.webp" alt="">
         </picture>
         <!-- the seal sits on the flap, so it rises with it when the flap opens -->
         <button class="seal" id="openBtn" aria-label="افتح الدعوة">
-          <picture>
-            <source media="(max-aspect-ratio: 3/4)" srcset="assets/seal-m.png">
-            <img src="assets/seal.png" alt="">
-          </picture>
+          <img src="assets/seal.webp" alt="" fetchpriority="high">
         </button>
       </div>
     </div>
@@ -686,7 +682,7 @@
       <p class="venue" data-f="venueName"></p>
       <p class="address" data-f="venueAddress"></p>
       <div class="map-box">
-        <iframe class="map" id="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="الخريطة"></iframe>
+        <iframe class="map" id="map" referrerpolicy="no-referrer-when-downgrade" title="الخريطة"></iframe>
         <div class="map-pin" aria-hidden="true">
           <svg viewBox="0 0 46 58"><path d="M23 2C11.4 2 2 11.2 2 22.6 2 37.5 23 56 23 56s21-18.5 21-33.4C44 11.2 34.6 2 23 2z" fill="#9c7a3c" stroke="#fff" stroke-width="2.5"/><circle cx="23" cy="22" r="11" fill="#fff"/><path d="M23 28.2s-6.2-3.8-6.2-8.2a3.4 3.4 0 0 1 6.2-1.9 3.4 3.4 0 0 1 6.2 1.9c0 4.4-6.2 8.2-6.2 8.2z" fill="#9c7a3c"/></svg>
         </div>
@@ -810,7 +806,6 @@ if (guest && guest.trim()) $("#guestName").textContent = guest.trim();
 const f = o => new Intl.DateTimeFormat("ar-EG-u-nu-latn", o).format(eventDate);
 const timeAr = f({ hour: "numeric", minute: "2-digit" });
 $("#heroDate").textContent = `الساعة ${timeAr}`;
-$("#cardDate").textContent = `${f({ weekday: "long" })} ${f({ day: "numeric" })} ${f({ month: "long" })} ${f({ year: "numeric" })}`;
 
 /* ---- hero: date ---- */
 $("#heroWeekday").textContent = f({ weekday: "long" });
@@ -855,15 +850,18 @@ tlItems.forEach((el, i) => el.addEventListener("click", () => tlGoTo(i)));
 /* side padding in px (half the box minus half an item) so the first and last items can always reach the centre */
 const tlTrack = $("#tlItems");
 function tlPad() { tlTrack.style.paddingInline = Math.max(0, tlBox.clientWidth / 2 - tlItems[0].offsetWidth / 2) + "px"; }
-if (tlItems.length) tlPad();
+function tlLayout() { if (tlItems.length) tlPad(); updateTimeline(); }
 tlBox.addEventListener("scroll", () => requestAnimationFrame(updateTimeline), { passive: true });
-addEventListener("resize", () => { if (tlItems.length) tlPad(); updateTimeline(); });
-updateTimeline();
+addEventListener("resize", tlLayout);
 
 /* autoplay: move to the next item every 2s while the timeline is on screen,
-   back to the first after the last; pauses for a few seconds after the guest swipes or taps */
-let tlVisible = false, tlPausedUntil = 0;
-new IntersectionObserver(([e]) => tlVisible = e.isIntersecting, { threshold: .4 }).observe(tlBox);
+   back to the first after the last; pauses for a few seconds after the guest swipes or taps.
+   It is first measured when it comes on screen (not while the page loads behind the envelope) */
+let tlVisible = false, tlPausedUntil = 0, tlReady = false;
+new IntersectionObserver(([e]) => {
+  tlVisible = e.isIntersecting;
+  if (tlVisible && !tlReady) { tlReady = true; tlLayout(); }
+}, { threshold: .4 }).observe(tlBox);
 ["pointerdown", "touchstart", "wheel"].forEach(ev =>
   tlBox.addEventListener(ev, () => tlPausedUntil = Date.now() + 5000, { passive: true }));
 setInterval(() => {
@@ -873,7 +871,12 @@ setInterval(() => {
 
 /* ---- map / call ---- */
 const q = encodeURIComponent(CONFIG.mapQuery);
-$("#map").src = `https://maps.google.com/maps?q=${q}&z=15&output=embed`;
+/* Google Maps is heavy, so the map is only loaded once the guest scrolls near it */
+const mapIo = new IntersectionObserver(([e]) => {
+  if (!e.isIntersecting) return;
+  $("#map").src = `https://maps.google.com/maps?q=${q}&z=15&output=embed`;
+  mapIo.disconnect();
+}, { rootMargin: "400px 0px" });
 $("#mapBtn").href = `https://www.google.com/maps/search/?api=1&query=${q}`;
 $("#callBtn").href = `tel:${CONFIG.phone}`;
 
@@ -895,10 +898,26 @@ $("#openBtn").addEventListener("click", () => {
   setTimeout(() => {                                // the light holds a moment, then fades into the page
     intro.classList.add("gone");
     document.body.classList.add("opened");
-    document.body.classList.remove("locked");
+    document.body.classList.remove("locked", "defer");
     document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+    mapIo.observe($("#map"));
   }, reduce ? 300 : 4100);
 });
+/* once the envelope is on screen, let the page behind it load (paper, hero fonts, flowers) in idle time:
+   browsers that report paints wait for the envelope's paint, the others for the page load + its 1.2s entrance
+   (and the load + 3s is a safety net in case no paint is ever reported). Its fonts are fetched first, so the
+   page is laid out once with them instead of with slow system fallbacks and then again when they arrive */
+let undeferred = false;
+const undefer = () => {
+  if (undeferred) return; undeferred = true;
+  const fonts = !document.fonts ? [] :
+    ['700 1em "Aref Ruqaa"', '1em Amiri', '1em "El Messiri"'].map(f => document.fonts.load(f, "بسم & 0"));
+  Promise.all(fonts).catch(() => {}).then(() =>
+    (window.requestIdleCallback || setTimeout)(() => document.body.classList.remove("defer")));
+};
+const paintReports = window.PerformanceObserver && (PerformanceObserver.supportedEntryTypes || []).includes("largest-contentful-paint");
+if (paintReports) new PerformanceObserver((l, obs) => { obs.disconnect(); undefer(); }).observe({ type: "largest-contentful-paint", buffered: true });
+addEventListener("load", () => setTimeout(undefer, paintReports ? 3000 : 1200));
 function playMusic() {
   if (!CONFIG.music) return;
   audio.play().then(() => musicBtn.classList.add("playing")).catch(() => {});
