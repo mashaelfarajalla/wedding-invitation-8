@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(gh repo list --limit 20)",
+      "PowerShell(gh api repos/mashaelfarajalla/wedding-invitation-7/pages --jq '.html_url,.source')",
+      "PowerShell(git init -b main)",
+      "PowerShell(git add .)",
+      "PowerShell(git commit -q -m \"Wedding invitation - white envelope`n`nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\")",
+      "PowerShell(gh repo create wedding-invitation-8 --public --source . --push)",
+      "PowerShell(gh api -X POST repos/mashaelfarajalla/wedding-invitation-8/pages -f \"source[branch]=main\" -f \"source[path]=/\" --jq '.html_url')"
+    ]
+  }
+}
