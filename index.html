@@ -231,7 +231,7 @@
   }
   @keyframes flapDim{from{filter:brightness(.84)}to{filter:brightness(.7)}}
   @keyframes flapDimSoft{from{filter:brightness(.94)}to{filter:brightness(.84)}}
-  .env-pocket{display:none}
+  .env-pocket,.env-pocket-shade{display:none}
 
   /* ---- the light from inside: soft and round, no hard shapes — the envelope's own inside shows through ---- */
   /* under the flap: a warm glow that lights up the inside of the envelope as the flap lifts */
@@ -302,9 +302,13 @@
     #intro.s1 .env-flap>picture>img{filter:brightness(.94)}
     #intro.s2 .env-flap>picture>img,#intro.s2 .seal img{animation:flapDimSoft 3.3s ease-in both}
     /* the envelope's straight front edge: the open triangle's tip tucks in behind it */
-    .env-pocket{display:block;position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;opacity:0}
-    #intro.s1 .env-pocket{filter:brightness(.9);transition:filter 2.4s ease}
-    #intro.s2 .env-pocket{opacity:1;transition:filter 2.4s ease,opacity .5s ease}
+    /* this envelope's printed flap casts a wide shadow, so its front comes in two parts: the front itself, cut to
+       the flap's shape and hidden under the closed flap (so it is there from the start: the tip never shows), and
+       plain paper over the printed shadow around the flap, which fades in as the flap lifts away like a real shadow */
+    .env-pocket,.env-pocket-shade{display:block;position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+    .env-pocket-shade{opacity:0}
+    #intro.s1 .env-pocket,#intro.s1 .env-pocket-shade{filter:brightness(.9);transition:filter 2.4s ease}
+    #intro.s2 .env-pocket-shade{opacity:1;transition:filter 2.4s ease,opacity .9s ease}
     /* the light layers are already soft gradients, so phones skip their live blur (blurring and blending
        full-screen layers every frame is what made the opening stutter); the moving layers get their own
        GPU layer as soon as the seal is tapped */
@@ -588,6 +592,7 @@
         <img class="env-body" src="assets/envelope-body-w.webp" alt="" fetchpriority="high" decoding="async">
       </picture>
         <i class="env-inside" aria-hidden="true"></i>
+        <picture><source media="(max-aspect-ratio: 3/4)" srcset="assets/envelope-pocket-shade-m-w.webp"><img class="env-pocket-shade" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt=""></picture>
         <picture><source media="(max-aspect-ratio: 3/4)" srcset="assets/envelope-pocket-m-w.webp"><img class="env-pocket" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt=""></picture>
       </div>
       <!-- written on the envelope, just under the seal -->
